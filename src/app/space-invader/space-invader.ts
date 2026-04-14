@@ -9,27 +9,22 @@ import { entity } from '../../types/entity';
 })
 export class SpaceInvader implements OnInit, AfterViewInit {
 
+  leftPressed = false;
+  rightPressed = false;
+  spacePressed = false;
 
-  @ViewChild("canvas")
-  canvasRef!: ElementRef<HTMLCanvasElement>
-  canvas: HTMLCanvasElement | null = null
-  ctx: CanvasRenderingContext2D | null = null
 
   @HostListener('window:keydown', ['$event'])
   getKey(event: KeyboardEvent) {
     let touche = event.key; //on récupère la valeur de la touche enfoncée 
 
-    if ((touche == 'q' || touche == 'ArrowLeft') && this.heroXY.x > 2) {  //Déplacement vers la gauche et test si proche du bord
+    if (touche == 'q' || touche == 'ArrowLeft') {  //Déplacement vers la gauche et test si proche du bord
 
-
-      this.heroXY.x -= this.heroXY.speed;
+      this.leftPressed = true;
     }
 
-    if ((touche == 'd' || touche == 'ArrowRight') && this.heroXY.x < (this.canvas!.width - this.heroWidth - 2)) {  // Déplacement vers la droite et test si proche du bord
-
-
-      this.heroXY.x += this.heroXY.speed;
-
+    if (touche == 'd' || touche == 'ArrowRight') {  // Déplacement vers la droite et test si proche du bord
+      this.rightPressed = true;
     }
 
     if (touche == 'p') {
@@ -39,7 +34,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     }
 
     if (touche == ' ') {   // Création d'un objet laser chaque fois que l'on appuye sur Espace
-      this.addLaser();
+      this.spacePressed = true
     }
 
     // if (touche != '' && !isGameStarted) {
@@ -49,20 +44,44 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     // }
   }
 
+  @HostListener('window:keyup', ['$event'])
+  getKeyUp(event: KeyboardEvent) {
+    if (event.key === 'q' || event.key === 'ArrowLeft') {
+      this.leftPressed = false;
+    }
+
+    if (event.key == 'd' || event.key == 'ArrowRight') {
+      this.rightPressed = false;
+    }
+
+    if (event.key == ' ') {
+      this.spacePressed = false;
+    }
+  }
+
+  @ViewChild("canvas")
+  canvasRef!: ElementRef<HTMLCanvasElement>
+  canvas: HTMLCanvasElement | null = null
+  ctx: CanvasRenderingContext2D | null = null
+  canvasWidth: number = 480;
 
   heroImage: HTMLImageElement = new Image()
-
+  heroImageSrc: string = "assets/hero_sprite_sheet_1.png"
   heroXY: entity = { x: 0, y: 0, speed: 0 }
   heroWidth: number = 16
   heroHeight: number = 16
-  heroSpeed: number = 4
+  heroSpeed: number = 200
 
   laserImage = new Image();
-
+  laserImageSrc = "assets/laser_sprite.png";
   laserList: entity[] = []
   laserWidth = 2;
   laserHeight = 10;
 
+
+  lastShootTime: number = 0;
+  shootCooldown: number = 100;
+  maxLasers: number = 10
 
 
   gameStarted: Boolean = false;
@@ -74,19 +93,16 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     if (this.canvasRef) {
       this.canvas = this.canvasRef?.nativeElement
+      this.canvas.width = this.canvasWidth
+      this.canvas.height = this.canvasWidth * (window.innerHeight / window.innerWidth)
       this.ctx = this.canvas.getContext('2d')
-      console.log(this.ctx)
-      console.log(this.canvas.width)
-      console.log(this.canvas.height)
 
-
-      this.heroImage.src = "assets/hero_sprite_sheet_1.png"
-      this.laserImage.src = "assets/laser_sprite.png";
-
+      this.heroImage.src = this.heroImageSrc
+      this.laserImage.src = this.laserImageSrc
 
 
       this.heroXY.x = Math.round(this.canvas.width / 2) - this.heroWidth / 2;
-      this.heroXY.y = Math.round(this.canvas.height - this.heroHeight - 5);
+      this.heroXY.y = Math.round(this.canvas.height - this.heroHeight - 3);
       this.heroXY.speed = this.heroSpeed;
 
     };
@@ -103,35 +119,62 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
 
       setInterval(() => {
+
+        const now = performance.now();
+        const deltaTime = 16 / 1000;
         this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
         frame++
+
         if (frame === 60) {
           frame = 0;
         }
 
+        this.update(deltaTime, now)
+
         this.animateHero(frame);
 
-        this.animateLasers(frame);
+        this.animateLasers(deltaTime);
 
       }, 16)
 
     }
   }
 
+  update(deltaTime: number, now: number) {
 
-  addLaser() {
-    if (this.laserList.length < 3) { // maximum capé à 3 projectiles pour plus de difficulté
-      // audioLaser.play(); // Bruit d'un tir de laser 
+    if (this.leftPressed && this.heroXY.x > 2) {
+      this.heroXY.x -= this.heroXY.speed * deltaTime;
+    }
 
-      this.laserList.push({  // on crée un objet laser que l'on stocke dans un tableau regroupant les lasers
-        x: this.heroXY.x + (this.heroWidth / 2) - 1,
-        y: this.heroXY.y,
-        speed: 2
-      });
+    if (this.rightPressed && this.heroXY.x < (this.canvas!.width - this.heroWidth - 2)) {
+      this.heroXY.x += this.heroXY.speed * deltaTime;
+    }
+
+
+    if (this.spacePressed && this.laserList.length < this.maxLasers) {
+      if (this.canShoot(now)) {
+        this.addLaser();
+        this.lastShootTime = now;
+      }
     }
   }
 
-  animateLasers(frame: number) {
+  canShoot(now: number) {
+    return now - this.lastShootTime > this.shootCooldown
+  }
+
+
+  addLaser() {
+    // audioLaser.play(); // Bruit d'un tir de laser 
+
+    this.laserList.push({  // on crée un objet laser que l'on stocke dans un tableau regroupant les lasers
+      x: this.heroXY.x + (this.heroWidth / 2) - 1,
+      y: this.heroXY.y,
+      speed: 200 // px / sec
+    });
+  }
+
+  animateLasers(deltaTime: number) {
 
     let index = 0; // compteur pour la boucle while pour les indexes
     let hit = null; // permet de recupérer l'index du monstre qui est touché, reste négatif tant que aucun monstres n'est touché
@@ -143,37 +186,20 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
       // hit = collisionDetection(this.laserList[index], monsterXY); // on detecte s'il y colision entre laser et monstres
 
-      if ((this.laserList[index].y + this.laserHeight) <= 0) { // Gestion du cas où le laser dépasse le plafond
+      const laser = this.laserList[index];
+
+      if ((laser.y + this.laserHeight) <= 0) { // Gestion du cas où le laser dépasse le plafond
 
         this.laserList.splice(index, 1);
         numberOfLasers = this.laserList.length;
-
-        // } else if (hit != null) { //gestion en cas de colision avec un laser 
-
-
-        //   audioHit.play(); // Son du monstre touché par un tir de laser 
-
-        //   ctx.clearRect(monsterXY[hit].X, monsterXY[hit].Y, monsterWidth, monsterHeight);
-        //   ctx.clearRect(laserXY[index].X, laserXY[index].Y, laserWidth, laserHeight);
-
-        //   state.score += 100;
-        //   barSetup(state.life, state.stage, state.score);
-
-        //   laserXY.splice(index, 1);
-        //   monsterXY.splice(hit, 1);
-        //   hit = null;
 
 
       } else { // déplacement classique des lasers si aucune perturbation
 
 
-        this.laserList[index].y -= this.laserList[index].speed; //vitesse de déplacement des lasers
+        laser.y -= laser.speed * deltaTime; //vitesse de déplacement des lasers
 
-        console.log("DRAWING LASER")
-
-        this.ctx?.drawImage(this.laserImage, this.laserList[index].x, this.laserList[index].y);
-
-        numberOfLasers = this.laserList.length; // on récupère le nombre de lasers restants après opération
+        this.ctx?.drawImage(this.laserImage, laser.x, laser.y);
         index++;
 
       }
