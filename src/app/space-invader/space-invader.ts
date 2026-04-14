@@ -19,7 +19,6 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     let touche = event.key; //on récupère la valeur de la touche enfoncée 
 
     if (touche == 'q' || touche == 'ArrowLeft') {  //Déplacement vers la gauche et test si proche du bord
-
       this.leftPressed = true;
     }
 
@@ -28,19 +27,14 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     }
 
     if (touche == 'p') {
-
       alert("Le jeu est en pause. Cliquez sur OK pour reprendre");
-
     }
 
     if (touche == ' ') {   // Création d'un objet laser chaque fois que l'on appuye sur Espace
       this.spacePressed = true
     }
-
     // if (touche != '' && !isGameStarted) {
-
     //   startNewGame();
-
     // }
   }
 
@@ -71,6 +65,11 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   heroWidth: number = 16
   heroHeight: number = 16
   heroSpeed: number = 200
+
+
+  heroAnimTime: number = 0;
+  heroFrame: number = 0;
+  heroFrameSpeed: number = 0.025;
 
   laserImage = new Image();
   laserImageSrc = "assets/laser_sprite.png";
@@ -110,28 +109,21 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
 
   startNewGame() {
-
-
     if (!this.gameStarted) {
-
       this.gameStarted = true
       let frame = 0;
 
-
       setInterval(() => {
-
         const now = performance.now();
-        const deltaTime = 16 / 1000;
+        const deltaTime = 16.66 / 1000; // 0.016 sec 
         this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
         frame++
-
         if (frame === 60) {
           frame = 0;
         }
-
         this.update(deltaTime, now)
 
-        this.animateHero(frame);
+        this.animateHero();
 
         this.animateLasers(deltaTime);
 
@@ -156,6 +148,13 @@ export class SpaceInvader implements OnInit, AfterViewInit {
         this.addLaser();
         this.lastShootTime = now;
       }
+    }
+
+    this.heroAnimTime += deltaTime;
+
+    if (this.heroAnimTime > this.heroFrameSpeed) {
+      this.heroFrame = (this.heroFrame + 1) % 4;
+      this.heroAnimTime = 0;
     }
   }
 
@@ -207,34 +206,8 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   }
 
 
-  animateHero(frameCount: number) {
-
-    let frame = frameCount % 4
-    let spriteFrame = 0;
-
-    switch (frame) {
-
-      case 0:
-        spriteFrame = 0;
-        break;
-
-      case 1:
-        spriteFrame = 1;
-        break;
-      case 2:
-        spriteFrame = 2;
-        break;
-
-      case 3:
-        spriteFrame = 3;
-        break;
-
-      default:
-        break;
-    }
-
-    this.ctx?.drawImage(this.heroImage, spriteFrame * this.heroWidth, 0, this.heroWidth, this.heroHeight, this.heroXY.x, this.heroXY.y, this.heroWidth, this.heroHeight)
-
+  animateHero() {
+    this.ctx?.drawImage(this.heroImage, this.heroFrame * this.heroWidth, 0, this.heroWidth, this.heroHeight, this.heroXY.x, this.heroXY.y, this.heroWidth, this.heroHeight)
   }
 
 }
