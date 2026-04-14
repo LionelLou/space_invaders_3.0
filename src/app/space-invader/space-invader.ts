@@ -10,13 +10,10 @@ import { entity } from '../../types/entity';
 export class SpaceInvader implements OnInit, AfterViewInit {
 
 
-
-  heroImage: HTMLImageElement = new Image()
-
-
   @ViewChild("canvas")
   canvasRef!: ElementRef<HTMLCanvasElement>
   canvas: HTMLCanvasElement | null = null
+  ctx: CanvasRenderingContext2D | null = null
 
   @HostListener('window:keydown', ['$event'])
   getKey(event: KeyboardEvent) {
@@ -41,13 +38,9 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
     }
 
-    // if (touche == ' ') {   // Création d'un objet laser chaque fois que l'on appuye sur Espace
-
-
-    //   addLaser(laserXY);
-
-
-    // }
+    if (touche == ' ') {   // Création d'un objet laser chaque fois que l'on appuye sur Espace
+      this.addLaser();
+    }
 
     // if (touche != '' && !isGameStarted) {
 
@@ -57,12 +50,19 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   }
 
 
-  ctx: CanvasRenderingContext2D | null = null
-  heroXY: entity = { x: 0, y: 0, speed: 0 }
+  heroImage: HTMLImageElement = new Image()
 
+  heroXY: entity = { x: 0, y: 0, speed: 0 }
   heroWidth: number = 16
   heroHeight: number = 16
   heroSpeed: number = 4
+
+  laserImage = new Image();
+
+  laserList: entity[] = []
+  laserWidth = 2;
+  laserHeight = 10;
+
 
 
   gameStarted: Boolean = false;
@@ -81,17 +81,20 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
 
       this.heroImage.src = "assets/hero_sprite_sheet_1.png"
+      this.laserImage.src = "assets/laser_sprite.png";
 
 
-      this.heroXY.x = Math.round(this.canvas.width / 2) - this.heroWidth / 2
-      this.heroXY.y = Math.round(this.canvas.height - this.heroHeight - 5)
-      this.heroXY.speed = this.heroSpeed
+
+      this.heroXY.x = Math.round(this.canvas.width / 2) - this.heroWidth / 2;
+      this.heroXY.y = Math.round(this.canvas.height - this.heroHeight - 5);
+      this.heroXY.speed = this.heroSpeed;
 
     };
   }
 
 
   startNewGame() {
+
 
     if (!this.gameStarted) {
 
@@ -106,11 +109,74 @@ export class SpaceInvader implements OnInit, AfterViewInit {
           frame = 0;
         }
 
-        this.animateHero(frame)
+        this.animateHero(frame);
 
+        this.animateLasers(frame);
 
       }, 16)
 
+    }
+  }
+
+
+  addLaser() {
+    if (this.laserList.length < 3) { // maximum capé à 3 projectiles pour plus de difficulté
+      // audioLaser.play(); // Bruit d'un tir de laser 
+
+      this.laserList.push({  // on crée un objet laser que l'on stocke dans un tableau regroupant les lasers
+        x: this.heroXY.x + (this.heroWidth / 2) - 1,
+        y: this.heroXY.y,
+        speed: 2
+      });
+    }
+  }
+
+  animateLasers(frame: number) {
+
+    let index = 0; // compteur pour la boucle while pour les indexes
+    let hit = null; // permet de recupérer l'index du monstre qui est touché, reste négatif tant que aucun monstres n'est touché
+    let numberOfLasers = this.laserList.length; // on stocke le nombre de lasers avant opérations 
+
+    //Boucle for pour faire avancer les lasers
+
+    while (index < numberOfLasers) {
+
+      // hit = collisionDetection(this.laserList[index], monsterXY); // on detecte s'il y colision entre laser et monstres
+
+      if ((this.laserList[index].y + this.laserHeight) <= 0) { // Gestion du cas où le laser dépasse le plafond
+
+        this.laserList.splice(index, 1);
+        numberOfLasers = this.laserList.length;
+
+        // } else if (hit != null) { //gestion en cas de colision avec un laser 
+
+
+        //   audioHit.play(); // Son du monstre touché par un tir de laser 
+
+        //   ctx.clearRect(monsterXY[hit].X, monsterXY[hit].Y, monsterWidth, monsterHeight);
+        //   ctx.clearRect(laserXY[index].X, laserXY[index].Y, laserWidth, laserHeight);
+
+        //   state.score += 100;
+        //   barSetup(state.life, state.stage, state.score);
+
+        //   laserXY.splice(index, 1);
+        //   monsterXY.splice(hit, 1);
+        //   hit = null;
+
+
+      } else { // déplacement classique des lasers si aucune perturbation
+
+
+        this.laserList[index].y -= this.laserList[index].speed; //vitesse de déplacement des lasers
+
+        console.log("DRAWING LASER")
+
+        this.ctx?.drawImage(this.laserImage, this.laserList[index].x, this.laserList[index].y);
+
+        numberOfLasers = this.laserList.length; // on récupère le nombre de lasers restants après opération
+        index++;
+
+      }
     }
   }
 
