@@ -88,7 +88,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
   monsterAnimTime: number = 0;
   monsterFrame: number = 0;
-  monsterFrameSpeed: number = 0.05
+  monsterFrameSpeed: number = 0.2
 
   laserImage: HTMLImageElement = new Image();
   laserImageSrc = "assets/laser_sprite.png";
@@ -282,6 +282,10 @@ export class SpaceInvader implements OnInit, AfterViewInit {
         numberOfLasers = this.laserList.length;
 
 
+      } else if (this.isLaserCollidingMonster(laser)) {
+        this.laserList.splice(this.laserList.indexOf(laser), 1);
+        break;
+
       } else { // déplacement classique des lasers si aucune perturbation
 
 
@@ -292,6 +296,50 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
       }
     }
+  }
+
+  isLaserCollidingMonster(laser: entity) {
+    for (let i = 0; i < this.monstersXY.length; i++) { // on parcourt la liste des montres pour tester si un laser les touche
+
+      let isXValid = false;
+      let isYValid = false;
+
+      // Gestion de la colision du laser sur le monstre selon l'axe X 
+      let distanceX: number;
+      // cas où le laser est à gauche du monstre
+      if (laser.x + this.laserWidth <= this.monstersXY[i].x + (this.monsterWidth / 2)) {
+        distanceX = this.monstersXY[i].x - (laser.x + this.laserWidth);
+      }   // cas où le laser est à droite du monstre
+      else if (laser.x <= this.monstersXY[i].x + this.monsterWidth) {
+        distanceX = laser.x - (this.monstersXY[i].x + this.monsterWidth);
+      }
+
+      // si une distance faible à été détectée verticalement, donc qu'une collision laser/monstre à lieu sur l'axe X
+      // alors on confirme pour la partie X la colision, sinon les booléens de validation restent à False  
+
+      if (distanceX! <= 0) {
+
+        isXValid = true;
+
+        // si une distance faible à été détectée horizontalement, donc qu'une collision laser/monstre à lieu sur l'axe Y
+        // alors on confirme pour la partie Y la colision, sinon les booléens de validation restent à False     
+
+        if (((this.monstersXY[i].y <= laser.y) && (laser.y <= this.monstersXY[i].y + this.monsterHeight)))
+
+          // Ici on vient tester si les lasers rentrer dans les dimensions de la boite du monstre 
+          // Pour cela on vérifie que la position sur Y du laser est contenue dans les dimensions de la taille de la boîte un hauteur
+
+          isYValid = true;
+
+      }
+
+      // Si les positions X et Y du laser donnent sur un point de colision avec un monstre alors on garde l'index de la boîte touchée
+      if (isXValid && isYValid) {
+        this.monstersXY.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
   }
 
 
