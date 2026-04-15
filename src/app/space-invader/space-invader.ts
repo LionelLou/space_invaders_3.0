@@ -9,10 +9,16 @@ import { entity } from '../../types/entity';
 })
 export class SpaceInvader implements OnInit, AfterViewInit {
 
-  leftPressed = false;
-  rightPressed = false;
-  spacePressed = false;
+  leftPressed: boolean = false;
+  rightPressed: boolean = false;
+  spacePressed: boolean = false;
 
+  isMonstersDirectionRight: boolean = true;
+
+  gameStarted: boolean = false;
+  gameOver: boolean = false;
+
+  gameInterval: ReturnType<typeof setInterval> | null = null
 
   @HostListener('window:keydown', ['$event'])
   getKey(event: KeyboardEvent) {
@@ -71,7 +77,20 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   heroFrame: number = 0;
   heroFrameSpeed: number = 0.025;
 
-  laserImage = new Image();
+  monsterImage: HTMLImageElement = new Image();
+  monsterImageSrcs: string[] = ["assets/monster_sprite_sheet_1.png", "assets/monster_sprite_sheet_2.png", "assets/monster_sprite_sheet_3.png"]
+  monstersXY: entity[] = []
+  monsterWidth: number = 14;
+  monsterHeight: number = 12;
+  monsterSpeedX: number = 50;
+  monsterSpeedY: number = 1200;
+
+
+  monsterAnimTime: number = 0;
+  monsterFrame: number = 0;
+  monsterFrameSpeed: number = 0.05
+
+  laserImage: HTMLImageElement = new Image();
   laserImageSrc = "assets/laser_sprite.png";
   laserList: entity[] = []
   laserWidth = 2;
@@ -82,8 +101,6 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   shootCooldown: number = 100;
   maxLasers: number = 10
 
-
-  gameStarted: Boolean = false;
 
   ngOnInit(): void {
 
@@ -111,24 +128,61 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   startNewGame() {
     if (!this.gameStarted) {
       this.gameStarted = true
-      let frame = 0;
+      this.gameOver = false;
 
-      setInterval(() => {
+
+      this.initializeMonsters();
+      this.isMonstersDirectionRight = true;
+
+
+      this.gameInterval = setInterval(() => {
         const now = performance.now();
         const deltaTime = 16.66 / 1000; // 0.016 sec 
         this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
-        frame++
-        if (frame === 60) {
-          frame = 0;
-        }
+
         this.update(deltaTime, now)
 
         this.animateHero();
 
+        this.animateMonsters();
+
         this.animateLasers(deltaTime);
+
+        if (this.gameOver) {
+          clearInterval(this.gameInterval!)
+        }
 
       }, 16)
 
+    }
+  }
+
+  animateMonsters() {
+    for (let i = 0; i < this.monstersXY.length; i++) {
+      let element = this.monstersXY[i];
+      this.ctx?.drawImage(this.monsterImage, this.monsterFrame * this.monsterWidth, 0, this.monsterWidth, this.monsterHeight, element.x, element.y, this.monsterWidth, this.monsterHeight)
+    }
+  }
+
+  initializeMonsters() {
+    this.monsterImage.src = this.monsterImageSrcs[Math.floor(Math.random() * 3)]
+    if (this.canvas) {
+      let stepX = (this.canvas.width / 6);
+      let stepY = (this.canvas.height / 12) + 5;
+
+      this.monstersXY = []
+
+      for (let i = 1; i <= 5; i++) {
+        for (let j = 1; j <= 4; j++) {
+
+          let monster: entity = {
+            x: Math.round(stepX * i),
+            y: Math.round(stepY * j),
+            speed: this.monsterSpeedX
+          }
+          this.monstersXY.push(monster)
+        }
+      }
     }
   }
 
@@ -150,11 +204,46 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       }
     }
 
+    for (let i = 0; i < this.monstersXY.length; i++) {
+      let monster = this.monstersXY[i]
+      if (this.heroXY.y - (monster.y + this.monsterHeight) <= 5) {
+        this.gameOver = true;
+        break;
+      } else if (monster.x <= 0 && this.isMonstersDirectionRight == false) {
+        this.makeMonstersGetDown(deltaTime);
+        this.isMonstersDirectionRight = true;
+        break
+      } else if (monster.x >= this.canvas!.width - this.monsterWidth && this.isMonstersDirectionRight == true) {
+        this.makeMonstersGetDown(deltaTime);
+        this.isMonstersDirectionRight = false;
+        break;
+      } else {
+        if (this.isMonstersDirectionRight) {
+          this.monstersXY[i].x += this.monsterSpeedX * deltaTime
+        } else {
+          this.monstersXY[i].x -= this.monsterSpeedX * deltaTime
+        }
+      }
+    }
+
+    this.monsterAnimTime += deltaTime;
+
+    if (this.monsterAnimTime > this.monsterFrameSpeed) {
+      this.monsterFrame = (this.monsterFrame + 1) % 2;
+      this.monsterAnimTime = 0;
+    }
+
     this.heroAnimTime += deltaTime;
 
     if (this.heroAnimTime > this.heroFrameSpeed) {
       this.heroFrame = (this.heroFrame + 1) % 4;
       this.heroAnimTime = 0;
+    }
+  }
+
+  makeMonstersGetDown(deltaTime: number) {
+    for (let i = 0; i < this.monstersXY.length; i++) {
+      this.monstersXY[i].y += this.monsterSpeedY * deltaTime
     }
   }
 
@@ -169,7 +258,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     this.laserList.push({  // on crée un objet laser que l'on stocke dans un tableau regroupant les lasers
       x: this.heroXY.x + (this.heroWidth / 2) - 1,
       y: this.heroXY.y,
-      speed: 200 // px / sec
+      speed: this.heroSpeed
     });
   }
 
