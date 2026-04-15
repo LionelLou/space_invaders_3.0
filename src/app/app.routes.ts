@@ -3,7 +3,7 @@ import { SpaceInvader } from './space-invader/space-invader';
 
 export const routes: Routes = [
     {
-        path: "space-invaders",
+        path: "",
         component: SpaceInvader
     }
 ];
