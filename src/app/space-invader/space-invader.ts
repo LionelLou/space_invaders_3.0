@@ -145,7 +145,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       this.gameOver = false;
       this.roundWin = false;
       this.resetInputs();
-
+      this.selectRandomImageForMonsters();
       this.initializeMonsters();
       this.isMonstersDirectionRight = true;
 
@@ -165,6 +165,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
           } else {
             this.statsLifes.set(this.statsLifes() - 1);
           }
+          this.selectRandomImageForMonsters();
           this.gameOverSound.currentTime = 0
           this.gameOverSound.play();
         }
@@ -173,6 +174,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
           this.winSound.currentTime = 0;
           this.winSound.play();
           this.statsRound.set(this.statsRound() + 1);
+          this.selectRandomImageForMonsters();
           this.statsScore.set(this.statsScore() + 10000);
           clearInterval(this.gameInterval!);
           alert("GG, on continue ?");
@@ -194,6 +196,10 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     }
   }
 
+  selectRandomImageForMonsters() {
+    this.monsterImage.src = this.monsterImageSrcs[Math.floor(Math.random() * 3)]
+  }
+
   animateMonsters() {
     for (let i = 0; i < this.monstersXY.length; i++) {
       let element = this.monstersXY[i];
@@ -202,7 +208,6 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   }
 
   initializeMonsters() {
-    this.monsterImage.src = this.monsterImageSrcs[Math.floor(Math.random() * 3)]
     if (this.canvas) {
       let stepX = (this.canvas.width / 6);
       let stepY = (this.canvas.height / 12) + 5;
