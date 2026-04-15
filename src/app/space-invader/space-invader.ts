@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, signal, Signal, ViewChild } from '@angular/core';
 import { entity } from '../../types/entity';
 
 @Component({
@@ -9,6 +9,10 @@ import { entity } from '../../types/entity';
 })
 export class SpaceInvader implements OnInit, AfterViewInit {
 
+  statsLifes = signal(3);
+  statsScore = signal(0);
+  statsRound = signal(1);
+
   leftPressed: boolean = false;
   rightPressed: boolean = false;
   spacePressed: boolean = false;
@@ -17,6 +21,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
   gameStarted: boolean = false;
   gameOver: boolean = false;
+  roundWin: boolean = false;
 
   gameInterval: ReturnType<typeof setInterval> | null = null
 
@@ -66,7 +71,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   canvasWidth: number = 480;
 
   heroImage: HTMLImageElement = new Image()
-  heroImageSrc: string = "assets/hero_sprite_sheet_1.png"
+  heroImageSrc: string = "assets/sprites/hero_sprite_sheet_1.png"
   heroXY: entity = { x: 0, y: 0, speed: 0 }
   heroWidth: number = 16
   heroHeight: number = 16
@@ -78,7 +83,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   heroFrameSpeed: number = 0.025;
 
   monsterImage: HTMLImageElement = new Image();
-  monsterImageSrcs: string[] = ["assets/monster_sprite_sheet_1.png", "assets/monster_sprite_sheet_2.png", "assets/monster_sprite_sheet_3.png"]
+  monsterImageSrcs: string[] = ["assets/sprites/monster_sprite_sheet_1.png", "assets/sprites/monster_sprite_sheet_2.png", "assets/sprites/monster_sprite_sheet_3.png"]
   monstersXY: entity[] = []
   monsterWidth: number = 14;
   monsterHeight: number = 12;
@@ -91,16 +96,21 @@ export class SpaceInvader implements OnInit, AfterViewInit {
   monsterFrameSpeed: number = 0.2
 
   laserImage: HTMLImageElement = new Image();
-  laserImageSrc = "assets/laser_sprite.png";
+  laserImageSrc = "assets/sprites/laser_sprite.png";
   laserList: entity[] = []
   laserWidth = 2;
   laserHeight = 10;
 
 
   lastShootTime: number = 0;
-  shootCooldown: number = 100;
-  maxLasers: number = 10
+  shootCooldown: number = 150; //ms
+  maxLasers: number = 10;
 
+  laserSound = new Audio("assets/sounds/laser.wav");
+  gameOverSound = new Audio("assets/sounds/game-over.wav");
+  winSound = new Audio("assets/sounds/win.wav");
+  hitSound = new Audio("assets/sounds/hit.wav");
+  explosion = new Audio("assets/sounds/explosion");
 
   ngOnInit(): void {
 
@@ -117,7 +127,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       this.laserImage.src = this.laserImageSrc
 
 
-      this.heroXY.x = Math.round(this.canvas.width / 2) - this.heroWidth / 2;
+      // this.heroXY.x = ;
       this.heroXY.y = Math.round(this.canvas.height - this.heroHeight - 3);
       this.heroXY.speed = this.heroSpeed;
 
@@ -127,9 +137,14 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
   startNewGame() {
     if (!this.gameStarted) {
-      this.gameStarted = true
+      this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
+      this.laserList = [];
+      this.monstersXY = [];
+      this.heroXY.x = Math.round(this.canvas!.width / 2) - this.heroWidth / 2
+      this.gameStarted = true;
       this.gameOver = false;
-
+      this.roundWin = false;
+      this.resetInputs();
 
       this.initializeMonsters();
       this.isMonstersDirectionRight = true;
@@ -138,6 +153,32 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       this.gameInterval = setInterval(() => {
         const now = performance.now();
         const deltaTime = 16.66 / 1000; // 0.016 sec 
+
+        if (this.gameOver) {
+          if (this.statsLifes() === 0) {
+            clearInterval(this.gameInterval!)
+            alert("Sadge :( , essaye encore !")
+            this.gameStarted = false
+            this.statsLifes.set(3);
+            this.statsScore.set(0);
+            this.statsRound.set(1);
+          } else {
+            this.statsLifes.set(this.statsLifes() - 1);
+          }
+          this.gameOverSound.currentTime = 0
+          this.gameOverSound.play();
+        }
+
+        if (this.roundWin) {
+          this.winSound.currentTime = 0;
+          this.winSound.play();
+          this.statsRound.set(this.statsRound() + 1);
+          this.statsScore.set(this.statsScore() + 10000);
+          clearInterval(this.gameInterval!);
+          alert("GG, on continue ?");
+          this.gameStarted = false
+        }
+
         this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
 
         this.update(deltaTime, now)
@@ -147,10 +188,6 @@ export class SpaceInvader implements OnInit, AfterViewInit {
         this.animateMonsters();
 
         this.animateLasers(deltaTime);
-
-        if (this.gameOver) {
-          clearInterval(this.gameInterval!)
-        }
 
       }, 16)
 
@@ -173,7 +210,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       this.monstersXY = []
 
       for (let i = 1; i <= 5; i++) {
-        for (let j = 1; j <= 4; j++) {
+        for (let j = 1; j <= 5; j++) {
 
           let monster: entity = {
             x: Math.round(stepX * i),
@@ -251,21 +288,26 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     return now - this.lastShootTime > this.shootCooldown
   }
 
+  resetInputs() {
+    this.leftPressed = false;
+    this.rightPressed = false;
+    this.spacePressed = false;
+  }
 
   addLaser() {
-    // audioLaser.play(); // Bruit d'un tir de laser 
-
     this.laserList.push({  // on crée un objet laser que l'on stocke dans un tableau regroupant les lasers
       x: this.heroXY.x + (this.heroWidth / 2) - 1,
       y: this.heroXY.y,
       speed: this.heroSpeed
     });
+
+    this.laserSound.currentTime = 0;
+    this.laserSound.play();
   }
 
   animateLasers(deltaTime: number) {
 
     let index = 0; // compteur pour la boucle while pour les indexes
-    let hit = null; // permet de recupérer l'index du monstre qui est touché, reste négatif tant que aucun monstres n'est touché
     let numberOfLasers = this.laserList.length; // on stocke le nombre de lasers avant opérations 
 
     //Boucle for pour faire avancer les lasers
@@ -277,23 +319,23 @@ export class SpaceInvader implements OnInit, AfterViewInit {
       const laser = this.laserList[index];
 
       if ((laser.y + this.laserHeight) <= 0) { // Gestion du cas où le laser dépasse le plafond
-
         this.laserList.splice(index, 1);
         numberOfLasers = this.laserList.length;
-
+        if (this.monstersXY.length === 0) {
+          this.roundWin = true;
+        }
 
       } else if (this.isLaserCollidingMonster(laser)) {
         this.laserList.splice(this.laserList.indexOf(laser), 1);
+        this.hitSound.currentTime = 0;
+        this.hitSound.play();
         break;
 
       } else { // déplacement classique des lasers si aucune perturbation
 
-
         laser.y -= laser.speed * deltaTime; //vitesse de déplacement des lasers
-
         this.ctx?.drawImage(this.laserImage, laser.x, laser.y);
         index++;
-
       }
     }
   }
@@ -335,6 +377,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
 
       // Si les positions X et Y du laser donnent sur un point de colision avec un monstre alors on garde l'index de la boîte touchée
       if (isXValid && isYValid) {
+        this.statsScore.set(this.statsScore() + 200);
         this.monstersXY.splice(i, 1);
         return true;
       }
