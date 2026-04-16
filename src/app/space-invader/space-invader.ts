@@ -72,7 +72,7 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
   canvasWidth: number = 480;
 
   heroImage: HTMLImageElement = new Image()
-  heroImageSrc: string = "assets/sprites/hero_sprite_sheet_1.png"
+  heroImageSrc: string = "assets/sprites/space_invaders/hero_sprite_sheet_1.png"
   heroXY: entity = { x: 0, y: 0, speed: 0 }
   heroWidth: number = 16
   heroHeight: number = 16
@@ -84,7 +84,7 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
   heroFrameSpeed: number = 0.025;
 
   monsterImage: HTMLImageElement = new Image();
-  monsterImageSrcs: string[] = ["assets/sprites/monster_sprite_sheet_1.png", "assets/sprites/monster_sprite_sheet_2.png", "assets/sprites/monster_sprite_sheet_3.png"]
+  monsterImageSrcs: string[] = ["assets/sprites/space_invaders/monster_sprite_sheet_1.png", "assets/sprites/space_invaders/monster_sprite_sheet_2.png", "assets/sprites/space_invaders/monster_sprite_sheet_3.png"]
   monstersXY: entity[] = []
   monsterWidth: number = 14;
   monsterHeight: number = 12;
@@ -97,7 +97,7 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
   monsterFrameSpeed: number = 0.2
 
   laserImage: HTMLImageElement = new Image();
-  laserImageSrc = "assets/sprites/laser_sprite.png";
+  laserImageSrc = "assets/sprites/space_invaders/laser_sprite.png";
   laserList: entity[] = []
   laserWidth = 2;
   laserHeight = 10;
@@ -107,11 +107,11 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
   shootCooldown: number = 150; //ms
   maxLasers: number = 10;
 
-  laserSound = new Audio("assets/sounds/laser.wav");
-  gameOverSound = new Audio("assets/sounds/game-over.wav");
-  winSound = new Audio("assets/sounds/win.wav");
-  hitSound = new Audio("assets/sounds/hit.wav");
-  explosion = new Audio("assets/sounds/explosion");
+  laserSound = new Audio("assets/sounds/space_invaders/laser.wav");
+  gameOverSound = new Audio("assets/space_invaders/sounds/game-over.wav");
+  winSound = new Audio("assets/sounds/space_invaders/win.wav");
+  hitSound = new Audio("assets/sounds/space_invaders/hit.wav");
+  explosion = new Audio("assets/sounds/space_invaders/explosion");
 
   ngOnInit(): void {
 
