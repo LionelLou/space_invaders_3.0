@@ -1,8 +1,15 @@
-<div class="main">
-    <div class="canvas">
-        <canvas #canvas></canvas>
-        <div class="start-button-box">
-            <button class="start-button" (click)="startNewGame();"> Démarrer la partie ! </button>
+<div class="breakout">
+    <div class="main">
+        <div class="headbar">
+            <p> Vies : {{ statsLifes() }}</p>
+            <p> Round : {{ statsRound() }}</p>
+            <p> Score : {{ statsScore() }}</p>
+        </div>
+        <div class="canvas">
+            <canvas #canvas></canvas>
+            <div class="start-button-box">
+                <button class="start-button" (click)="startNewGame();"> Démarrer la partie ! </button>
+            </div>
         </div>
     </div>
 </div>
