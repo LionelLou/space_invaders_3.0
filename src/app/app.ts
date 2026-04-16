@@ -10,4 +10,6 @@ import { RouterOutlet, RouterLinkWithHref, RouterModule } from '@angular/router'
 })
 export class App {
   protected readonly title = signal('Space_Invaders_3.0');
+
+  currentPage: string = "home"
 }

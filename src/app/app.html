@@ -1,13 +1,16 @@
 <div class="global-page">
     <div class="header">
         <div class="navbar">
-            <div class="link" [routerLink]="['/']">
+            <div class="link" [routerLink]="['/']" (click)="currentPage = 'home'"
+                [class.active]="'home' == currentPage">
                 <p>Accueil</p>
             </div>
-            <div class="link" [routerLink]="['/', 'space-invaders']">
+            <div class="link" [routerLink]="['/', 'space-invaders']" (click)="currentPage = 'space-invaders'"
+                [class.active]="'space-invaders' == currentPage">
                 <p>Space invaders</p>
             </div>
-            <div class="link" [routerLink]="['/', 'breakout']">
+            <div class="link" [routerLink]="['/', 'breakout']" (click)="currentPage = 'breakout'"
+                [class.active]="currentPage == 'breakout'">
                 <p>Casse Briques</p>
             </div>
 
