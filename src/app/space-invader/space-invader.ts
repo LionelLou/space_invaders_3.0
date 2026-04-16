@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, signal, Signal, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, signal, Signal, ViewChild } from '@angular/core';
 import { entity } from '../../types/entity';
 
 @Component({
@@ -7,7 +7,8 @@ import { entity } from '../../types/entity';
   templateUrl: './space-invader.html',
   styleUrl: './space-invader.scss',
 })
-export class SpaceInvader implements OnInit, AfterViewInit {
+export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
+
 
   statsLifes = signal(3);
   statsScore = signal(0);
@@ -120,7 +121,7 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     if (this.canvasRef) {
       this.canvas = this.canvasRef?.nativeElement
       this.canvas.width = this.canvasWidth
-      this.canvas.height = this.canvasWidth * (window.innerHeight / window.innerWidth)
+      this.canvas.height = this.canvasWidth / 2
       this.ctx = this.canvas.getContext('2d')
 
       this.heroImage.src = this.heroImageSrc
@@ -395,5 +396,12 @@ export class SpaceInvader implements OnInit, AfterViewInit {
     this.ctx?.drawImage(this.heroImage, this.heroFrame * this.heroWidth, 0, this.heroWidth, this.heroHeight, this.heroXY.x, this.heroXY.y, this.heroWidth, this.heroHeight)
   }
 
+
+
+  ngOnDestroy(): void {
+    this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
+    clearInterval(this.gameInterval!);
+
+  }
 }
 

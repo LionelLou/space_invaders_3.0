@@ -1,1 +1,25 @@
-<router-outlet />
+<div class="global-page">
+    <div class="header">
+        <div class="navbar">
+            <div class="link" [routerLink]="['/']">
+                <p>Accueil</p>
+            </div>
+            <div class="link" [routerLink]="['/', 'space-invaders']">
+                <p>Space invaders</p>
+            </div>
+            <div class="link">
+                <p>placeholder</p>
+            </div>
+
+            <div class="link">
+                <p>placeholder</p>
+            </div>
+            <div class="link">
+                <p>placeholder</p>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <router-outlet></router-outlet>
+    </div>
+</div>

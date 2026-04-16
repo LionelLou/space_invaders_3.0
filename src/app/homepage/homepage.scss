@@ -1,0 +1,24 @@
+.main {
+
+    margin-left: auto;
+    margin-right: auto;
+    background-color: lightgoldenrodyellow;
+    border: 1px solid #213f77;
+    box-shadow: lightgoldenrodyellow 1px 1px 3px 3px;
+    border-radius: 10px;
+    height: 95%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+
+    font-size: 2rem;
+    font-weight: bold;
+    font-style: italic;
+    color: #213f77;
+
+    text-align: center;
+
+}
