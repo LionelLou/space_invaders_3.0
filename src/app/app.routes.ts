@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { SpaceInvader } from './space-invader/space-invader';
 import { Homepage } from './homepage/homepage';
+import { Breakout } from './breakout/breakout';
 
 export const routes: Routes = [
     {
@@ -10,5 +11,9 @@ export const routes: Routes = [
     {
         path: "space-invaders",
         component: SpaceInvader
+    },
+    {
+        path: "breakout",
+        component: Breakout
     }
 ];
