@@ -326,7 +326,6 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
 
       if ((laser.y + this.laserHeight) <= 0) { // Gestion du cas où le laser dépasse le plafond
         this.laserList.splice(index, 1);
-        numberOfLasers = this.laserList.length;
         if (this.monstersXY.length === 0) {
           this.roundWin = true;
         }
@@ -335,7 +334,6 @@ export class SpaceInvader implements OnInit, AfterViewInit, OnDestroy {
         this.laserList.splice(this.laserList.indexOf(laser), 1);
         this.hitSound.currentTime = 0;
         this.hitSound.play();
-        break;
 
       } else { // déplacement classique des lasers si aucune perturbation
 
