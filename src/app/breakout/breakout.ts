@@ -183,12 +183,12 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
         this.ctx?.clearRect(0, 0, this.canvas!.width, this.canvas!.height)
 
+        this.drawBricks();
+
         this.update(deltaTime)
 
         this.animateHero();
 
-
-        this.drawBricks();
         // this.animateBall();
 
         this.drawBall()
