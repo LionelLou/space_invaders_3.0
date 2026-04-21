@@ -65,7 +65,7 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
 
   padelImage = new Image();
-  padelImageSrc = "/assets/sprites/breakout/padel.png";
+  padelImageSrc = "assets/sprites/breakout/padel.png";
   padelXY: entity = {
     x: 0,
     y: 0,
@@ -76,7 +76,7 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
 
   ballImage = new Image();
-  ballImageSrc = "/assets/sprites/breakout/ball.png";
+  ballImageSrc = "assets/sprites/breakout/ball.png";
   ballXY: breakout_ball = {
     x: 0,
     y: 0,
@@ -90,9 +90,9 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
   greenBrickImage = new Image();
   redBrickImage = new Image();
   blueBrickImage = new Image();
-  greenBrickSrc = "/assets/sprites/breakout/green_tile.png"
-  blueBrickSrc = "/assets/sprites/breakout/blue_tile.png"
-  redBrickSrc = "/assets/sprites/breakout/red_tile.png"
+  greenBrickSrc = "assets/sprites/breakout/green_tile.png"
+  blueBrickSrc = "assets/sprites/breakout/blue_tile.png"
+  redBrickSrc = "assets/sprites/breakout/red_tile.png"
   brickImageList: HTMLImageElement[] = []
   brickWidth = 20
   brickHeight = 10
