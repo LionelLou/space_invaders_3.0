@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { entity } from '../../types/entity';
 import { breakout_ball } from '../../types/breakout_ball';
+import { breakout_brick } from '../../types/breakout_brick';
 
 @Component({
   selector: 'app-breakout',
@@ -86,6 +87,16 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
   ballWidth = 5;
   ballHeight = 5;
 
+  greenBrickImage = new Image();
+  redBrickImage = new Image();
+  blueBrickImage = new Image();
+  greenBrickSrc = "/assets/sprites/breakout/green_tile.png"
+  blueBrickSrc = "/assets/sprites/breakout/blue_tile.png"
+  redBrickSrc = "/assets/sprites/breakout/red_tile.png"
+  brickImageList: HTMLImageElement[] = []
+  brickWidth = 20
+  brickHeight = 10
+  brickList: breakout_brick[] = []
 
 
   ngAfterViewInit(): void {
@@ -97,6 +108,12 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
       this.padelImage.src = this.padelImageSrc;
       this.ballImage.src = this.ballImageSrc;
+
+      this.redBrickImage.src = this.redBrickSrc;
+      this.greenBrickImage.src = this.greenBrickSrc;
+      this.blueBrickImage.src = this.blueBrickSrc;
+
+      this.brickImageList = [this.blueBrickImage, this.greenBrickImage, this.redBrickImage]
 
 
       this.padelXY.x = Math.round(this.canvas!.width / 2) - this.padelWidth / 2
@@ -128,6 +145,7 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
       this.gameOver = false;
       this.roundWin = false;
       this.resetInputs();
+      this.initializeBricks()
 
       // this.initialize bricks;
 
@@ -170,6 +188,7 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
         this.animateHero();
 
 
+        this.drawBricks();
         // this.animateBall();
 
         this.drawBall()
@@ -207,9 +226,6 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
       this.ballXY.dy *= -1
     }
 
-
-
-
     if (this.ballXY.y < this.padelXY.y + this.padelHeight && this.ballXY.y + this.ballHeight > this.padelXY.y) {
 
       if (this.ballXY.x < this.padelXY.x + this.padelWidth && this.ballXY.x + this.ballWidth > this.padelXY.x) {
@@ -222,58 +238,57 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
         this.ballXY.dy = -this.ballXY.speed * Math.cos(angle)
 
       }
+    }
 
+    for (let i = 0; i < this.brickList.length; i++) {
+
+      let brick = this.brickList[i]
+      if (this.ballXY.y < brick.y + this.brickHeight && this.ballXY.y + this.ballHeight > brick.y) {
+
+        if (this.ballXY.x < brick.x + this.brickWidth && this.ballXY.x + this.ballWidth > brick.x) {
+
+          this.ballXY.dy *= -1;
+
+          if (brick.health == 0) {
+            this.brickList.splice(i, 1)
+          }
+
+          if (brick.health > 0) {
+            this.brickList[i].health -= 1
+          }
+        }
+      }
     }
   }
 
 
 
+  initializeBricks() {
+    let bricksPerLine = Math.floor(this.canvas?.width! / this.brickWidth)
 
+    let numberOfLines = Math.floor((this.canvas?.height! / 3) / this.brickHeight);
 
+    for (let j = 0; j < numberOfLines; j++) {
+      for (let i = 0; i < bricksPerLine; i++) {
+        this.brickList.push({
+          x: i * this.brickWidth,
+          y: j * this.brickHeight,
+          health: Math.round(Math.random() * 2)
+        })
+      }
+    }
+  }
 
+  drawBricks() {
+    for (let i = 0; i < this.brickList.length; i++) {
+      this.drawBrick(this.brickList[i])
+    }
+  }
 
-  // if (this.spacePressed && this.laserList.length < this.maxLasers) {
-  //   if (this.canShoot(now)) {
-  //     this.addLaser();
-  //     this.lastShootTime = now;
-  //   }
-  // }
+  drawBrick(brick: breakout_brick) {
 
-  // for (let i = 0; i < this.monstersXY.length; i++) {
-  //   let monster = this.monstersXY[i]
-  //   if (this.heroXY.y - (monster.y + this.monsterHeight) <= 5) {
-  //     this.gameOver = true;
-  //     break;
-  //   } else if (monster.x <= 0 && this.isMonstersDirectionRight == false) {
-  //     this.makeMonstersGetDown(deltaTime);
-  //     this.isMonstersDirectionRight = true;
-  //     break
-  //   } else if (monster.x >= this.canvas!.width - this.monsterWidth && this.isMonstersDirectionRight == true) {
-  //     this.makeMonstersGetDown(deltaTime);
-  //     this.isMonstersDirectionRight = false;
-  //     break;
-  //   } else {
-  //     if (this.isMonstersDirectionRight) {
-  //       this.monstersXY[i].x += this.monsterSpeedX * deltaTime
-  //     } else {
-  //       this.monstersXY[i].x -= this.monsterSpeedX * deltaTime
-  //     }
-  //   }
-  // }
-
-  // this.monsterAnimTime += deltaTime;
-
-  // if (this.monsterAnimTime > this.monsterFrameSpeed) {
-  //   this.monsterFrame = (this.monsterFrame + 1) % 2;
-  //   this.monsterAnimTime = 0;
-  // }
-
-  // this.heroAnimTime += deltaTime;
-
-  // if (this.heroAnimTime > this.heroFrameSpeed) {
-  //   this.heroFrame = (this.heroFrame + 1) % 4;
-  //   this.heroAnimTime = 0;
-  // }
+    this.ctx?.drawImage(this.brickImageList[brick.health], 0, 0, this.brickWidth, this.brickHeight, brick.x, brick.y, this.brickWidth, this.brickHeight)
+  }
 
 
   animateHero() {
