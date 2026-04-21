@@ -115,6 +115,8 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
       this.brickImageList = [this.blueBrickImage, this.greenBrickImage, this.redBrickImage]
 
+      console.log(this.brickImageList)
+
 
       this.padelXY.x = Math.round(this.canvas!.width / 2) - this.padelWidth / 2
       this.padelXY.y = Math.round(this.canvas.height - this.padelHeight - 3);
