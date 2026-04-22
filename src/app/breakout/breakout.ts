@@ -115,8 +115,7 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
       this.brickImageList = [this.blueBrickImage, this.greenBrickImage, this.redBrickImage]
 
-      console.log(this.brickImageList)
-
+      this.initializeBricks()
 
       this.padelXY.x = Math.round(this.canvas!.width / 2) - this.padelWidth / 2
       this.padelXY.y = Math.round(this.canvas.height - this.padelHeight - 3);
@@ -147,7 +146,6 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
       this.gameOver = false;
       this.roundWin = false;
       this.resetInputs();
-      this.initializeBricks()
 
       // this.initialize bricks;
 
@@ -157,15 +155,23 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
 
 
         if (this.gameOver) {
-          if (this.statsLifes() === 0) {
+          if (this.statsLifes() == 0) {
             clearInterval(this.gameInterval!)
             alert("Sadge :( , essaye encore !")
             this.gameStarted = false
+            this.gameOver = false;
+            this.resetBallAndPadel();
+            this.initializeBricks()
             this.statsLifes.set(3);
             this.statsScore.set(0);
             this.statsRound.set(1);
           } else {
+            clearInterval(this.gameInterval!)
             this.statsLifes.set(this.statsLifes() - 1);
+            this.gameOver = false;
+            this.gameStarted = false;
+            this.resetBallAndPadel();
+            alert("Sadge :( , essaye encore !");
           }
 
           // this.gameOverSound.currentTime = 0
@@ -203,6 +209,14 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
+  resetBallAndPadel() {
+    this.padelXY.x = Math.round(this.canvas!.width / 2) - this.padelWidth / 2
+    this.padelXY.y = Math.round(this.canvas!.height - this.padelHeight - 3);
+
+    this.ballXY.x = this.padelXY.x
+    this.ballXY.y = this.padelXY.y - 5
+  }
+
 
   update(deltaTime: number) {
 
@@ -224,8 +238,12 @@ export class Breakout implements AfterViewInit, OnInit, OnDestroy {
       this.ballXY.dx *= -1
     }
 
-    if (this.ballXY.y <= 0 || this.ballXY.y >= this.canvas?.height!) {
+    if (this.ballXY.y <= 0) {
       this.ballXY.dy *= -1
+    }
+
+    if (this.ballXY.y >= this.canvas?.height!) {
+      this.gameOver = true;
     }
 
     if (this.ballXY.y < this.padelXY.y + this.padelHeight && this.ballXY.y + this.ballHeight > this.padelXY.y) {
